@@ -26,7 +26,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       title: 'EJun Configuration template！',
       filename: 'index.html',
-      template: 'src/assets/index.html'
+      template: 'assets/index.html'
     })//根据模板生成对应的dist内容
   ],
   module: {
