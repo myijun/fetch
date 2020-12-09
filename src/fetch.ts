@@ -1,8 +1,14 @@
-import jQueryAdapter from "./jQuery/jQueryAdapter";
+import axiosAdapter from "./adapter/axiosAdapter";
+import jQueryAdapter from "./adapter/jQueryAdapter";
 
 declare let jQuery;
 declare let axios;
 
+export interface IFetchConfig {
+    headers?: Object,
+    timeout?: number,
+    responseType?: string
+}
 /**
  * 
  */
@@ -17,15 +23,16 @@ export default class fetch {
      * 
      * @param kernel 处理核心
      */
-    constructor(kernel) {
+    constructor(kernel, config?: IFetchConfig) {
         this.kernel = kernel;
         if (this.kernel === (jQuery ?? undefined)) {
-            this.kernel = new jQueryAdapter(this.kernel);
-            this.kernel.__get = this.kernel.jQueryGetAdapter;
-            this.kernel.__post = this.kernel.jQueryPostAdapter;
+            this.kernel = new jQueryAdapter(this.kernel, config);
+            this.kernel.__get = this.kernel.getAdapter;
+            this.kernel.__post = this.kernel.postAdapter;
         } else if (this.kernel === (axios ?? undefined)) {
-            this.kernel.__get = this.kernel.get;
-            this.kernel.__post = this.kernel.post;
+            this.kernel = new axiosAdapter(this.kernel, config);
+            this.kernel.__get = this.kernel.getAdapter;
+            this.kernel.__post = this.kernel.postAdapter;
         }
     }
 
@@ -35,7 +42,7 @@ export default class fetch {
      * @param url 
      * @param config 
      */
-    public get(url: string, config?: any) {
+    public get(url: string, config?: any): Promise<any> {
         return this.kernel.__get.call(this.kernel, url, config);
     }
 
@@ -45,7 +52,7 @@ export default class fetch {
      * @param data 
      * @param config 
      */
-    public post(url: string, data?: any, config?: any) {
+    public post(url: string, data?: any, config?: any): Promise<any> {
         return this.kernel.__post.call(this.kernel, url, data, config);;
     }
 

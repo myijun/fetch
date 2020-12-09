@@ -1,3 +1,6 @@
+import { IFetchConfig } from "../fetch";
+import { suffixURI } from "./commons";
+
 interface IConfig {
     url: string
     data?: any,
@@ -11,6 +14,8 @@ interface IConfig {
     success?: Function,
     error?: Function,
     complete?: Function
+    beforeSend?: Function
+    timeout?: Number
 }
 let defaultAjaxConfig: IConfig = {
     url: '',
@@ -30,12 +35,15 @@ export default class jQueryAdapter {
      */
     protected kernel;
 
+    protected config: IFetchConfig;
+
     /**
      * 
      * @param kernel 处理核心
      */
-    constructor(kernel) {
+    constructor(kernel, config: IFetchConfig) {
         this.kernel = kernel;
+        this.config = config;
     }
 
     /**
@@ -43,7 +51,7 @@ export default class jQueryAdapter {
         * @param url 
         * @param config 
         */
-    public jQueryPostAdapter(url: string, config?: any) {
+    public getAdapter(url: string, config?: any) {
         return this.ajax({
             url: url,
             type: 'GET'
@@ -56,7 +64,7 @@ export default class jQueryAdapter {
      * @param data 
      * @param config 
      */
-    public jQueryGetAdapter(url: string, data?: any, config?: any) {
+    public postAdapter(url: string, data?: any, config?: any) {
         return this.ajax({
             url: url,
             type: "POST"
@@ -71,14 +79,25 @@ export default class jQueryAdapter {
         let that = this;
         return new Promise(function (resolve, reject) {
             config = Object.assign(defaultAjaxConfig, config);
-            config.url += (config.url.indexOf('?') > -1 ? "&" : "?");
-            config.url += ('_t=' + new Date().getTime());
+            config.url = suffixURI(config.url);
             config.success = function (response) {
                 resolve(response);
             }
+
+            if (that.config.headers) {
+                let _beforeSend = config.beforeSend ?? undefined;
+                config.beforeSend = function (request) {
+                    for (let key in that.config.headers) {
+                        request.setRequestHeader(key, that.config.headers[key]);
+                    }
+                    _beforeSend && _beforeSend.call(this, request);
+                };
+            }
+            that.config.timeout && (config.timeout = that.config.timeout);
             config.error = function (response) {
                 reject(response);
             }
+
             that.kernel.ajax(config);
         });
     }
