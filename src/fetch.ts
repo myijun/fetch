@@ -1,3 +1,5 @@
+import jQueryAdapter from "./jQuery/jQueryAdapter";
+
 declare let jQuery;
 declare let axios;
 
@@ -17,33 +19,16 @@ export default class fetch {
      */
     constructor(kernel) {
         this.kernel = kernel;
-        if (this.kernel === jQuery) {
-            this.kernel.__get = this.jQueryGetAdapter;
-            this.kernel.__post = this.jQueryPostAdapter;
-        } else if (this.kernel === axios) {
+        if (this.kernel === (jQuery ?? undefined)) {
+            this.kernel = new jQueryAdapter(this.kernel);
+            this.kernel.__get = this.kernel.jQueryGetAdapter;
+            this.kernel.__post = this.kernel.jQueryPostAdapter;
+        } else if (this.kernel === (axios ?? undefined)) {
             this.kernel.__get = this.kernel.get;
             this.kernel.__post = this.kernel.post;
         }
     }
 
-    /**
-     * jquery post适配器
-     * @param url 
-     * @param config 
-     */
-    protected jQueryPostAdapter(url: string, config?: any) {
-        console.log(1);
-    }
-
-    /**
-     * jQuery get适配器
-     * @param url 
-     * @param data 
-     * @param config 
-     */
-    protected jQueryGetAdapter(url: string, data?: any, config?: any) {
-        console.log(2);
-    }
 
     /**
      * 
