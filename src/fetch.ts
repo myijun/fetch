@@ -7,7 +7,16 @@ declare let axios;
 export interface IFetchConfig {
     headers?: Object,
     timeout?: number,
-    responseType?: string
+    responseType?: string,
+    /**
+     * 
+     */
+    xBefore?: Function,
+    /**
+     * 请求完成后最终执行参数
+     */
+    XComplete?: Function
+
 }
 /**
  * 

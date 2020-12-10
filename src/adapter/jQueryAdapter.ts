@@ -83,16 +83,43 @@ export default class jQueryAdapter {
             config.success = function (response) {
                 resolve(response);
             }
-
+            //添加一个beforeSend执行数组集合
+            let beforeSendFunctions: Function[] = [];
+            that.config.xBefore && (beforeSendFunctions.push(
+                that.config.xBefore
+            ));
+            config.beforeSend && (beforeSendFunctions.push(config.beforeSend));
             if (that.config.headers) {
-                let _beforeSend = config.beforeSend ?? undefined;
-                config.beforeSend = function (request) {
+                beforeSendFunctions.push(function (request) {
                     for (let key in that.config.headers) {
                         request.setRequestHeader(key, that.config.headers[key]);
                     }
-                    _beforeSend && _beforeSend.call(this, request);
-                };
+                });
             }
+            config.beforeSend = function (request) {
+                for (let beforeSend of beforeSendFunctions) {
+                    try {
+                        beforeSend.call(this, request);
+                    } catch (error) {
+
+                    }
+                }
+            }
+            //执行结束后，执行统一方法
+            let completeFunctions: Function[] = [];
+            that.config.XComplete && (completeFunctions.push(that.config.XComplete));
+            config.complete && (completeFunctions.push(config.complete))
+            config.complete = function (request) {
+                for (let complete of completeFunctions) {
+                    try {
+                        complete.call(this, request);
+                    } catch (error) {
+
+                    }
+                }
+            }
+
+            //
             that.config.timeout && (config.timeout = that.config.timeout);
             config.error = function (response) {
                 reject(response);

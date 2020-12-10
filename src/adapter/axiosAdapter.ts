@@ -7,14 +7,32 @@ export default class axiosAdapter {
      * 进行ajax请求使用的kin
      */
     protected kernel;
+
+    /**
+     * 
+     */
+    protected config: IFetchConfig;
     /**
      * 
      * @param kernel 处理核心
      */
     constructor(kernel, config: IFetchConfig) {
-        this.kernel = kernel;
-        if (config) {
-            this.kernel(config);
+        this.kernel = kernel.create(config);
+        this.config = config;
+        let that = this;
+        if (config.xBefore) {
+            this.kernel.interceptors.request.use(config => {
+                that.config.xBefore.call(that.kernel, config);
+            }, error => {
+                return Promise.reject(error);
+            });
+        }
+        if (config.XComplete) {
+            this.kernel.interceptors.response.use(response => {
+                that.config.XComplete.call(that.kernel, response);
+            }, error => {
+                return Promise.reject(error);
+            });
         }
     }
 
